@@ -43,6 +43,15 @@ RUN apt-get update \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     #
+    # Avoid having to use "sudo" with pip when running as non-root user
+    && SNIPPET='if [ "$(stat -c %U /usr/local/bin)" != "$(id -u)" ]; then \
+            sudo chown -R $(id -u):root /usr/local/lib/python*/site-packages \
+            && sudo chown -R $(id -u):root /usr/local/bin; \
+        fi' \
+    && echo $SNIPPET >> /home/$USERNAME/.bashrc \
+    && echo $SNIPPET >> /home/$USERNAME/.zshrc \
+    && chown $USERNAME /home/$USERNAME/.bashrc /home/$USERNAME/.zshrc \
+    #
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
